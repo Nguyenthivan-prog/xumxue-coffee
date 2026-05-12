@@ -17,7 +17,7 @@ export function Footer() {
             </div>
             <div>
               <p className="text-cream font-semibold">{CAFE_INFO.name}</p>
-              <p className="text-cream/60 text-xs">{CAFE_INFO.domain}</p>
+              <p className="text-cream/60 text-xs">{CAFE_INFO.email}</p>
             </div>
           </div>
           <nav className="flex flex-wrap gap-x-5 gap-y-2 text-sm">

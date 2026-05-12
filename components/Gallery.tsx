@@ -6,7 +6,6 @@ const GALLERY_ITEMS = [
   { src: "/gallery/space-8.jpg", alt: "Không gian quán" },
   { src: "/gallery/space-9.jpg", alt: "Không gian quán" },
   { src: "/gallery/space-10.jpg", alt: "Không gian quán" },
-  { src: "/gallery/space-11.jpg", alt: "Không gian quán" },
 ];
 
 export function Gallery() {
