@@ -97,7 +97,7 @@ export default function MenuPage() {
         <footer className="mt-10 pt-6 border-t border-ochre/30 text-center">
           <p className="text-walnut/80 text-sm">{CAFE_INFO.address}</p>
           <p className="text-walnut/60 text-xs mt-1">
-            {CAFE_INFO.domain} · Mở cửa 8:00 – 24:00 hằng ngày
+            {CAFE_INFO.email} · Mở cửa 8:00 – 24:00 hằng ngày
           </p>
         </footer>
       </div>
