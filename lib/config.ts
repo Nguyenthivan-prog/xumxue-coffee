@@ -8,6 +8,7 @@ export interface Room {
   description: string;
   pricePerHour: number;
   bestFor: string[];
+  bookingUrl: string;
 }
 
 export const ROOMS: Record<RoomId, Room> = {
@@ -20,6 +21,7 @@ export const ROOMS: Record<RoomId, Room> = {
       "Sức chứa 30–40 người. Phù hợp cho lớp học, workshop, hội thảo.",
     pricePerHour: 200_000,
     bestFor: ["Lớp học", "Workshop", "Hội thảo"],
+    bookingUrl: "https://calendar.app.google/Knn6i444VPT6QxCn8",
   },
   small: {
     id: "small",
@@ -30,6 +32,7 @@ export const ROOMS: Record<RoomId, Room> = {
       "Sức chứa 6–8 người. Phù hợp cho nhóm nhỏ ngồi học, làm việc nhóm, họp nội bộ.",
     pricePerHour: 40_000,
     bestFor: ["Nhóm học", "Làm việc nhóm", "Họp nhỏ"],
+    bookingUrl: "https://calendar.app.google/aAVir1TviTKYsDcq7",
   },
 };
 
@@ -42,7 +45,7 @@ export const CAFE_INFO = {
   name: "Xum Xuê Coffee",
   tagline: "Cà phê & cho thuê phòng họp theo giờ tại Hà Nội",
   domain: "xumxuecoffee.com",
-  email: "xumxuecoffee@gmail.com",
+  email: "",
   address: "Tầng 2, số 12 ngõ 4C Đặng Văn Ngữ, Trung Tự, Đống Đa, Hà Nội",
   phone: "0966 967 016",
   mapEmbedUrl:
@@ -51,13 +54,6 @@ export const CAFE_INFO = {
 
 export function formatVND(value: number): string {
   return value.toLocaleString("vi-VN") + "đ";
-}
-
-export function getHourSlots(): number[] {
-  return Array.from(
-    { length: CLOSING_HOUR - OPENING_HOUR },
-    (_, i) => OPENING_HOUR + i
-  );
 }
 
 export function formatHour(hour: number): string {

@@ -17,7 +17,9 @@ export function Location() {
             <InfoBlock label="Địa chỉ" value={CAFE_INFO.address} />
             <InfoBlock label="Giờ mở cửa" value="8:00 – 24:00 hằng ngày" />
             <InfoBlock label="Điện thoại" value={CAFE_INFO.phone} />
-            <InfoBlock label="Email" value={CAFE_INFO.email} />
+            {CAFE_INFO.email && (
+              <InfoBlock label="Email" value={CAFE_INFO.email} />
+            )}
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                 CAFE_INFO.name + " " + CAFE_INFO.address
