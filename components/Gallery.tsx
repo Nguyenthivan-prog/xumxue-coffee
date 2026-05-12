@@ -1,15 +1,12 @@
 const GALLERY_ITEMS = [
   { src: "/gallery/space-1.jpg", alt: "Không gian quán" },
   { src: "/gallery/space-2.jpg", alt: "Không gian quán" },
-  { src: "/gallery/space-5.jpg", alt: "Không gian quán" },
   { src: "/gallery/space-6.jpg", alt: "Không gian quán" },
   { src: "/gallery/space-7.jpg", alt: "Không gian quán" },
   { src: "/gallery/space-8.jpg", alt: "Không gian quán" },
   { src: "/gallery/space-9.jpg", alt: "Không gian quán" },
   { src: "/gallery/space-10.jpg", alt: "Không gian quán" },
   { src: "/gallery/space-11.jpg", alt: "Không gian quán" },
-  { src: "/gallery/space-3.jpg", alt: "Đồ uống tại quán" },
-  { src: "/gallery/space-4.jpg", alt: "Bánh tại quán" },
 ];
 
 export function Gallery() {
