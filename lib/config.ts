@@ -28,7 +28,7 @@ export const ROOMS: Record<RoomId, Room> = {
     capacity: "6–8 người",
     description:
       "Sức chứa 6–8 người. Phù hợp cho nhóm nhỏ ngồi học, làm việc nhóm, họp nội bộ.",
-    pricePerHour: 40_000,
+    pricePerHour: 50_000,
     bestFor: ["Nhóm học", "Làm việc nhóm", "Họp nhỏ"],
   },
 };

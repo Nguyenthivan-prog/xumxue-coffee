@@ -39,6 +39,9 @@ public/logo-original.png
 # vercel
 .vercel
 
+# netlify CLI
+.netlify/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
