@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   BOOKING_ENDPOINT,
   CLOSING_HOUR,
@@ -55,6 +55,8 @@ export function BookingWidget() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [busyHours, setBusyHours] = useState<Set<number>>(new Set());
+  const [loadingBusy, setLoadingBusy] = useState(false);
 
   const room = roomId ? ROOMS[roomId] : null;
   const days = useMemo(() => {
@@ -62,10 +64,46 @@ export function BookingWidget() {
     return Array.from({ length: 14 }, (_, i) => addDays(today, i));
   }, []);
 
+  useEffect(() => {
+    if (step !== "time" || !roomId || !BOOKING_ENDPOINT) {
+      return;
+    }
+    let cancelled = false;
+    setLoadingBusy(true);
+    const url = `${BOOKING_ENDPOINT}?page=busy&room=${roomId}&date=${date}`;
+    fetch(url)
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        const list: number[] = Array.isArray(d?.busy) ? d.busy : [];
+        setBusyHours(new Set(list));
+      })
+      .catch(() => {
+        if (!cancelled) setBusyHours(new Set());
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingBusy(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [step, roomId, date]);
+
+  const rangeHasBusy = useMemo(() => {
+    for (let h = startHour; h < endHour; h++) {
+      if (busyHours.has(h)) return true;
+    }
+    return false;
+  }, [startHour, endHour, busyHours]);
+
   const hours = endHour > startHour ? endHour - startHour : 0;
   const total = room ? hours * room.pricePerHour : 0;
   const validTime =
-    hours >= 1 && startHour >= OPENING_HOUR && endHour <= CLOSING_HOUR && endHour > startHour;
+    hours >= 1 &&
+    startHour >= OPENING_HOUR &&
+    endHour <= CLOSING_HOUR &&
+    endHour > startHour &&
+    !rangeHasBusy;
   const validForm = form.customerName.trim() !== "" && form.customerPhone.trim() !== "";
 
   async function submit() {
@@ -163,6 +201,9 @@ export function BookingWidget() {
               total={total}
               pricePerHour={room.pricePerHour}
               validTime={validTime}
+              busyHours={busyHours}
+              loadingBusy={loadingBusy}
+              rangeHasBusy={rangeHasBusy}
               onBack={() => setStep("date")}
               onNext={() => setStep("form")}
             />
@@ -334,6 +375,9 @@ function StepTime({
   total,
   pricePerHour,
   validTime,
+  busyHours,
+  loadingBusy,
+  rangeHasBusy,
   onBack,
   onNext,
 }: {
@@ -347,6 +391,9 @@ function StepTime({
   total: number;
   pricePerHour: number;
   validTime: boolean;
+  busyHours: Set<number>;
+  loadingBusy: boolean;
+  rangeHasBusy: boolean;
   onBack: () => void;
   onNext: () => void;
 }) {
@@ -359,6 +406,14 @@ function StepTime({
     (_, i) => startHour + 1 + i
   );
 
+  // end h hợp lệ nếu mọi giờ k trong [startHour, h-1] đều không bận
+  function endHasConflict(h: number): boolean {
+    for (let k = startHour; k < h; k++) {
+      if (busyHours.has(k)) return true;
+    }
+    return false;
+  }
+
   function onStartChange(h: number) {
     setStartHour(h);
     if (endHour <= h) setEndHour(h + 1);
@@ -369,9 +424,58 @@ function StepTime({
       <p className="text-walnut mb-1">
         <span className="text-chocolate font-medium">{roomName}</span> · {formatDateVN(date)}
       </p>
-      <p className="text-walnut/70 text-sm mb-5">
+      <p className="text-walnut/70 text-sm mb-4">
         Chọn giờ bắt đầu và giờ kết thúc. Giá {formatVND(pricePerHour)}/giờ. Quán mở 8h - 24h.
       </p>
+
+      <div className="mb-5">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-walnut/80 text-sm">Lịch trống hôm đó</p>
+          <div className="flex items-center gap-3 text-xs">
+            <span className="flex items-center gap-1">
+              <span className="inline-block w-3 h-3 rounded bg-emerald-100 border border-emerald-300" />
+              <span className="text-walnut/70">Trống</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-block w-3 h-3 rounded bg-red-500" />
+              <span className="text-walnut/70">Bận</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-block w-3 h-3 rounded bg-caramel" />
+              <span className="text-walnut/70">Đang chọn</span>
+            </span>
+          </div>
+        </div>
+        <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
+          {startOptions.map((h) => {
+            const busy = busyHours.has(h);
+            const selected = !busy && h >= startHour && h < endHour;
+            const base =
+              "p-2 rounded-lg text-center text-xs font-medium select-none transition";
+            const cls = busy
+              ? "bg-red-500 text-white cursor-not-allowed"
+              : selected
+              ? "bg-caramel text-cream cursor-pointer"
+              : "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 cursor-pointer";
+            return (
+              <button
+                key={h}
+                type="button"
+                disabled={busy}
+                onClick={() => !busy && onStartChange(h)}
+                className={`${base} ${cls}`}
+                aria-label={`${formatHour(h)} ${busy ? "đã có khách đặt" : "trống"}`}
+              >
+                <div>{formatHour(h)}</div>
+                <div className="text-[10px] opacity-90 mt-0.5">{busy ? "Bận" : "Trống"}</div>
+              </button>
+            );
+          })}
+        </div>
+        {loadingBusy && (
+          <p className="text-walnut/60 text-xs mt-2">Đang tải lịch...</p>
+        )}
+      </div>
 
       <div className="grid sm:grid-cols-2 gap-4 mb-5">
         <label className="flex flex-col gap-1.5 text-sm">
@@ -381,11 +485,15 @@ function StepTime({
             onChange={(e) => onStartChange(Number(e.target.value))}
             className="px-3 py-2.5 rounded-lg border border-ochre/40 bg-cream focus:outline-none focus:border-caramel text-base"
           >
-            {startOptions.map((h) => (
-              <option key={h} value={h}>
-                {formatHour(h)}
-              </option>
-            ))}
+            {startOptions.map((h) => {
+              const busy = busyHours.has(h);
+              return (
+                <option key={h} value={h} disabled={busy}>
+                  {formatHour(h)}
+                  {busy ? " — Bận" : ""}
+                </option>
+              );
+            })}
           </select>
         </label>
 
@@ -396,16 +504,20 @@ function StepTime({
             onChange={(e) => setEndHour(Number(e.target.value))}
             className="px-3 py-2.5 rounded-lg border border-ochre/40 bg-cream focus:outline-none focus:border-caramel text-base"
           >
-            {endOptions.map((h) => (
-              <option key={h} value={h}>
-                {h === 24 ? "24:00 (nửa đêm)" : formatHour(h)}
-              </option>
-            ))}
+            {endOptions.map((h) => {
+              const conflict = endHasConflict(h);
+              return (
+                <option key={h} value={h} disabled={conflict}>
+                  {h === 24 ? "24:00 (nửa đêm)" : formatHour(h)}
+                  {conflict ? " — Bận" : ""}
+                </option>
+              );
+            })}
           </select>
         </label>
       </div>
 
-      <div className="bg-sand/30 rounded-lg p-4 mb-6 text-sm">
+      <div className="bg-sand/30 rounded-lg p-4 mb-4 text-sm">
         <div className="flex flex-wrap justify-between gap-3">
           <div>
             <p className="text-walnut/70 uppercase tracking-wider text-xs mb-1">Khung giờ</p>
@@ -419,6 +531,12 @@ function StepTime({
           </div>
         </div>
       </div>
+
+      {rangeHasBusy && (
+        <p className="text-red-600 text-sm mb-4">
+          Khung giờ bạn chọn trùng với booking đã có. Vui lòng chọn khung khác.
+        </p>
+      )}
 
       <div className="flex justify-between gap-3">
         <button
